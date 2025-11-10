@@ -10,13 +10,13 @@ export default function FileUpload({ onFilesChange }: FileUploadProps) {
     onFilesChange(files);
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
     onFilesChange(files);
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
   };
 
