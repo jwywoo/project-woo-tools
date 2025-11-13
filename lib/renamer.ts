@@ -1,4 +1,5 @@
 import { RenamedFile } from './types';
+import JSZip from 'jszip';
 
 export interface RenameOptions {
   startNumber: string;
@@ -62,20 +63,25 @@ export function renameFiles(
 }
 
 export async function downloadRenamedFiles(files: File[], renamedFiles: RenamedFile[]) {
+  const zip = new JSZip();
+
+  // Add all renamed files to the zip
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const newName = renamedFiles[i]?.renamed || file.name;
-
-    const url = URL.createObjectURL(file);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = newName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    // Small delay between downloads to avoid browser blocking
-    await new Promise(resolve => setTimeout(resolve, 100));
+    zip.file(newName, file);
   }
+
+  // Generate the zip file
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+  // Download the zip file
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'renamed-files.zip';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
