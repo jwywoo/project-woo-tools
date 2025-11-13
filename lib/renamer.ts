@@ -3,12 +3,13 @@ import { RenamedFile } from './types';
 export interface RenameOptions {
   startNumber: string;
   gap: number;
+  keepExtension: boolean;
 }
 
 export function renameFiles(
   files: File[],
   pattern: string,
-  options: RenameOptions = { startNumber: '1', gap: 1 }
+  options: RenameOptions = { startNumber: '1', gap: 1, keepExtension: true }
 ): RenamedFile[] {
   if (!pattern) {
     return files.map(file => ({
@@ -37,9 +38,6 @@ export function renameFiles(
     // Replace {name} with original filename (without extension)
     renamed = renamed.replace(/\{name\}/g, nameWithoutExt);
 
-    // Replace {ext} with file extension
-    renamed = renamed.replace(/\{ext\}/g, extension || '');
-
     // Replace {index} with file number (custom start + gap)
     renamed = renamed.replace(/\{index\}/g, String(currentNumber).padStart(padding, '0'));
 
@@ -50,6 +48,11 @@ export function renameFiles(
 
     // Replace {date} with current date
     renamed = renamed.replace(/\{date\}/g, today);
+
+    // Add extension if keepExtension is true
+    if (options.keepExtension && extension) {
+      renamed = `${renamed}.${extension}`;
+    }
 
     return {
       original: file.name,

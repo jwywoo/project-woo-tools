@@ -38,7 +38,7 @@ export default function MainPage() {
 
   const handlePreview = () => {
     if (files.length > 0) {
-      const renamed = renameFiles(files, pattern, { startNumber, gap });
+      const renamed = renameFiles(files, pattern, { startNumber, gap, keepExtension: true });
       setRenamedFiles(renamed);
       setShowPreview(true);
     }
@@ -66,36 +66,45 @@ export default function MainPage() {
           </p>
         </div>
 
-        {/* Top Section - Upload and Pattern Settings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <FileUpload onFilesChange={handleFilesChange} />
-          <PatternInput
-            pattern={pattern}
-            startNumber={startNumber}
-            gap={gap}
-            onPatternChange={handlePatternChange}
-            onStartNumberChange={handleStartNumberChange}
-            onGapChange={handleGapChange}
-            onPreview={handlePreview}
-            onConfirm={handleConfirm}
-            disabled={files.length === 0}
-          />
-        </div>
-
-        {/* Bottom Section - Before and After Preview */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FileList
-            title="Original Files"
-            files={originalFileNames}
-            emptyMessage="No files uploaded yet"
-            variant="original"
-          />
-          <FileList
-            title="Preview (Renamed)"
-            files={showPreview ? renamedFileNames : []}
-            emptyMessage="Click Preview button to see renamed files"
-            variant="renamed"
-          />
+          {/* Left Column - Upload and Pattern Settings */}
+          <div className="space-y-6">
+            <FileUpload onFilesChange={handleFilesChange} />
+            <PatternInput
+              pattern={pattern}
+              startNumber={startNumber}
+              gap={gap}
+              onPatternChange={handlePatternChange}
+              onStartNumberChange={handleStartNumberChange}
+              onGapChange={handleGapChange}
+              onPreview={handlePreview}
+              onConfirm={handleConfirm}
+              disabled={files.length === 0}
+            />
+          </div>
+
+          {/* Right Column - Before and After Preview */}
+          <div className="flex flex-col gap-6">
+            <div className="h-[430px]">
+              <FileList
+                title="Original Files"
+                files={originalFileNames}
+                fileObjects={files}
+                emptyMessage="No files uploaded yet"
+                variant="original"
+              />
+            </div>
+            <div className="h-[430px]">
+              <FileList
+                title="Preview (Renamed)"
+                files={showPreview ? renamedFileNames : []}
+                fileObjects={showPreview ? files : []}
+                emptyMessage="Click Preview button to see renamed files"
+                variant="renamed"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

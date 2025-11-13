@@ -90,14 +90,13 @@ export default function PatternInput({
         <div className="bg-blue-50 dark:bg-gray-700 rounded-lg p-4">
           <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">Quick Guide:</p>
           <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
-            <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{name}'}</code> - Original name</li>
-            <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{ext}'}</code> - File extension</li>
+            <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{name}'}</code> - Original filename (without extension)</li>
             <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{index}'}</code> - Number with padding from Start Number</li>
             <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{date}'}</code> - Current date (YYYY-MM-DD)</li>
           </ul>
           <div className="mt-2 pt-2 border-t border-blue-200 dark:border-gray-600">
             <p className="text-xs text-gray-700 dark:text-gray-300">
-              <strong>Start Number:</strong> 0000 → 0000, 0001, 0002... | 004 → 004, 005, 006...
+              <strong>Example:</strong> photo_{'{index}'} + Start 0000 → photo_0000, photo_0001...
             </p>
             <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">
               <strong>Gap:</strong> Gap 2 + Start 00 → 00, 02, 04, 06...
