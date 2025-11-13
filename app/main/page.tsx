@@ -21,6 +21,12 @@ export default function MainPage() {
     setRenamedFiles([]);
   };
 
+  const handleReorder = (newOrder: File[]) => {
+    setFiles(newOrder);
+    setShowPreview(false);
+    setRenamedFiles([]);
+  };
+
   const handlePatternChange = (newPattern: string) => {
     setPattern(newPattern);
     setShowPreview(false);
@@ -93,6 +99,7 @@ export default function MainPage() {
                 fileObjects={files}
                 emptyMessage="No files uploaded yet"
                 variant="original"
+                onReorder={handleReorder}
               />
             </div>
             <div className="h-[430px]">
