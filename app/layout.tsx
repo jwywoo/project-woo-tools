@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "File Renamer",
+  title: "WooTool: File Rename",
   description: "Rename your files with custom patterns",
 };
 

@@ -65,7 +65,7 @@ export default function MainPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            File Renamer
+            WooTool: File Rename
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300">
             Upload files and rename them with custom patterns
