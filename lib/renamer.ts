@@ -62,6 +62,16 @@ export function renameFiles(
   });
 }
 
+// Sanitize filename for cross-platform compatibility
+function sanitizeFilename(filename: string): string {
+  // Remove or replace characters that are invalid on Windows: < > : " / \ | ? *
+  // Also remove control characters (0-31)
+  return filename
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+    .replace(/^\.+/, '_')  // Don't allow filenames starting with dots on Windows
+    .trim();
+}
+
 export async function downloadRenamedFiles(files: File[], renamedFiles: RenamedFile[]) {
   const zip = new JSZip();
 
@@ -69,11 +79,23 @@ export async function downloadRenamedFiles(files: File[], renamedFiles: RenamedF
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const newName = renamedFiles[i]?.renamed || file.name;
-    zip.file(newName, file);
+    const safeName = sanitizeFilename(newName);
+
+    zip.file(safeName, file, {
+      binary: true,
+      // Use DOS date for better Windows compatibility
+      date: new Date()
+    });
   }
 
-  // Generate the zip file
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  // Generate the zip file with platform-specific options
+  const zipBlob = await zip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 },
+    // Use DOS-compatible format for better cross-platform support
+    platform: 'DOS'
+  });
 
   // Download the zip file
   const url = URL.createObjectURL(zipBlob);
