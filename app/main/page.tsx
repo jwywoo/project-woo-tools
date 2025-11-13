@@ -10,6 +10,8 @@ import { RenamedFile } from '@/lib/types';
 export default function MainPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [pattern, setPattern] = useState<string>('');
+  const [startNumber, setStartNumber] = useState<string>('1');
+  const [gap, setGap] = useState<number>(1);
   const [renamedFiles, setRenamedFiles] = useState<RenamedFile[]>([]);
   const [showPreview, setShowPreview] = useState<boolean>(false);
 
@@ -24,9 +26,19 @@ export default function MainPage() {
     setShowPreview(false);
   };
 
+  const handleStartNumberChange = (newStartNumber: string) => {
+    setStartNumber(newStartNumber);
+    setShowPreview(false);
+  };
+
+  const handleGapChange = (newGap: number) => {
+    setGap(newGap);
+    setShowPreview(false);
+  };
+
   const handlePreview = () => {
     if (files.length > 0) {
-      const renamed = renameFiles(files, pattern);
+      const renamed = renameFiles(files, pattern, { startNumber, gap });
       setRenamedFiles(renamed);
       setShowPreview(true);
     }
@@ -59,7 +71,11 @@ export default function MainPage() {
           <FileUpload onFilesChange={handleFilesChange} />
           <PatternInput
             pattern={pattern}
+            startNumber={startNumber}
+            gap={gap}
             onPatternChange={handlePatternChange}
+            onStartNumberChange={handleStartNumberChange}
+            onGapChange={handleGapChange}
             onPreview={handlePreview}
             onConfirm={handleConfirm}
             disabled={files.length === 0}

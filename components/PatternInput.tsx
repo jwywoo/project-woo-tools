@@ -2,7 +2,11 @@
 
 interface PatternInputProps {
   pattern: string;
+  startNumber: string;
+  gap: number;
   onPatternChange: (pattern: string) => void;
+  onStartNumberChange: (startNumber: string) => void;
+  onGapChange: (gap: number) => void;
   onPreview: () => void;
   onConfirm: () => void;
   disabled?: boolean;
@@ -10,7 +14,11 @@ interface PatternInputProps {
 
 export default function PatternInput({
   pattern,
+  startNumber,
+  gap,
   onPatternChange,
+  onStartNumberChange,
+  onGapChange,
   onPreview,
   onConfirm,
   disabled = false,
@@ -29,9 +37,36 @@ export default function PatternInput({
             type="text"
             value={pattern}
             onChange={(e) => onPatternChange(e.target.value)}
-            placeholder="e.g., photo_{index:3}.{ext}"
+            placeholder="e.g., photo_{index}.{ext}"
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Start Number
+            </label>
+            <input
+              type="text"
+              value={startNumber}
+              onChange={(e) => onStartNumberChange(e.target.value)}
+              placeholder="e.g., 0000 or 01"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Gap
+            </label>
+            <input
+              type="number"
+              value={gap}
+              onChange={(e) => onGapChange(parseInt(e.target.value) || 1)}
+              min="1"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -57,9 +92,17 @@ export default function PatternInput({
           <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
             <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{name}'}</code> - Original name</li>
             <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{ext}'}</code> - File extension</li>
-            <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{index}'}</code> - Number (1, 2, 3...)</li>
-            <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{date}'}</code> - Current date</li>
+            <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{index}'}</code> - Number with padding from Start Number</li>
+            <li><code className="bg-white dark:bg-gray-600 px-1 rounded">{'{date}'}</code> - Current date (YYYY-MM-DD)</li>
           </ul>
+          <div className="mt-2 pt-2 border-t border-blue-200 dark:border-gray-600">
+            <p className="text-xs text-gray-700 dark:text-gray-300">
+              <strong>Start Number:</strong> 0000 → 0000, 0001, 0002... | 004 → 004, 005, 006...
+            </p>
+            <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">
+              <strong>Gap:</strong> Gap 2 + Start 00 → 00, 02, 04, 06...
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,15 @@
 import { RenamedFile } from './types';
 
-export function renameFiles(files: File[], pattern: string): RenamedFile[] {
+export interface RenameOptions {
+  startNumber: string;
+  gap: number;
+}
+
+export function renameFiles(
+  files: File[],
+  pattern: string,
+  options: RenameOptions = { startNumber: '1', gap: 1 }
+): RenamedFile[] {
   if (!pattern) {
     return files.map(file => ({
       original: file.name,
@@ -10,6 +19,11 @@ export function renameFiles(files: File[], pattern: string): RenamedFile[] {
 
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
+  // Parse start number and determine padding
+  const startNum = parseInt(options.startNumber) || 0;
+  const padding = options.startNumber.length;
+  const gap = options.gap || 1;
+
   return files.map((file, index) => {
     const nameParts = file.name.split('.');
     const extension = nameParts.length > 1 ? nameParts.pop() : '';
@@ -17,18 +31,21 @@ export function renameFiles(files: File[], pattern: string): RenamedFile[] {
 
     let renamed = pattern;
 
+    // Calculate current index number
+    const currentNumber = startNum + (index * gap);
+
     // Replace {name} with original filename (without extension)
     renamed = renamed.replace(/\{name\}/g, nameWithoutExt);
 
     // Replace {ext} with file extension
     renamed = renamed.replace(/\{ext\}/g, extension || '');
 
-    // Replace {index} with file number (1-based)
-    renamed = renamed.replace(/\{index\}/g, String(index + 1));
+    // Replace {index} with file number (custom start + gap)
+    renamed = renamed.replace(/\{index\}/g, String(currentNumber).padStart(padding, '0'));
 
     // Replace {index:N} with padded file number (e.g., {index:3} -> 001, 002, 003)
     renamed = renamed.replace(/\{index:(\d+)\}/g, (_, digits) => {
-      return String(index + 1).padStart(parseInt(digits), '0');
+      return String(currentNumber).padStart(parseInt(digits), '0');
     });
 
     // Replace {date} with current date
