@@ -68,25 +68,25 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
   };
 
   const itemClass = variant === 'renamed'
-    ? 'bg-green-100 dark:bg-green-900 p-2 rounded text-green-800 dark:text-green-200'
-    : 'bg-gray-100 dark:bg-gray-700 p-2 rounded';
+    ? 'bg-white/30 dark:bg-white/30 p-2 rounded text-white dark:text-white'
+    : 'bg-white/20 dark:bg-white/20 p-2 rounded text-white dark:text-white';
 
   const canDrag = variant === 'original' && !!onReorder;
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col h-full">
+      <div className="bg-orange dark:bg-summer-blue rounded-lg shadow-lg p-6 flex flex-col h-full border-4 border-orange dark:border-orange">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-3xl font-semibold text-white dark:text-orange">
             {title}
           </h2>
           {variant === 'original' && files.length > 0 && (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/20 dark:hover:bg-orange/20 rounded-lg transition-colors"
               title="Expand view"
             >
-              <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-white dark:text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
               </svg>
             </button>
@@ -94,8 +94,8 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
         </div>
       <div className="flex-1 overflow-y-auto min-h-0">
         {files.length === 0 ? (
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 flex items-center">
-            <span className="text-gray-600 dark:text-gray-300 text-sm">{emptyMessage}</span>
+          <div className="bg-white/20 dark:bg-white/20 rounded-lg p-3 flex items-center">
+            <span className="text-white dark:text-white text-sm">{emptyMessage}</span>
           </div>
         ) : (
           <div className="space-y-2 pr-2">
@@ -108,9 +108,9 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
               return (
                 <div key={index} className="relative">
                   {showTopIndicator && (
-                    <div className="absolute -top-1 left-0 right-0 h-0.5 bg-blue-500 z-10">
-                      <div className="absolute -left-1 -top-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <div className="absolute -right-1 -top-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="absolute -top-1 left-0 right-0 h-0.5 bg-white dark:bg-white z-10">
+                      <div className="absolute -left-1 -top-1 w-2 h-2 bg-white dark:bg-white rounded-full"></div>
+                      <div className="absolute -right-1 -top-1 w-2 h-2 bg-white dark:bg-white rounded-full"></div>
                     </div>
                   )}
                   <div
@@ -128,14 +128,14 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
                       <img
                         src={previewUrls[index]!}
                         alt={file}
-                        className="w-10 h-10 object-cover rounded border border-gray-300 dark:border-gray-600"
+                        className="w-10 h-10 object-cover rounded border border-white dark:border-orange"
                       />
                     )}
                   </div>
                   {showBottomIndicator && (
-                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-500 z-10">
-                      <div className="absolute -left-1 -top-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <div className="absolute -right-1 -top-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white z-10">
+                      <div className="absolute -left-1 -top-1 w-2 h-2 bg-white rounded-full"></div>
+                      <div className="absolute -right-1 -top-1 w-2 h-2 bg-white rounded-full"></div>
                     </div>
                   )}
                 </div>
@@ -149,15 +149,15 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/20 z-50 flex items-center justify-center p-4" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-orange dark:bg-summer-blue rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col border-4 border-orange dark:border-orange" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{title}</h3>
+            <div className="flex items-center justify-between p-6 border-b border-white/40 dark:border-orange/40">
+              <h3 className="text-3xl font-semibold text-white dark:text-orange">{title}</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/20 dark:hover:bg-orange/20 rounded-lg transition-colors"
               >
-                <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-white dark:text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -175,9 +175,9 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
                   return (
                     <div key={index} className="relative">
                       {showLeftIndicator && (
-                        <div className="absolute -left-2 top-0 bottom-0 w-1 bg-blue-500 z-10 rounded-full">
-                          <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded-full"></div>
-                          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <div className="absolute -left-2 top-0 bottom-0 w-1 bg-orange z-10 rounded-full">
+                          <div className="absolute -top-1 -left-1 w-3 h-3 bg-orange rounded-full"></div>
+                          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-orange rounded-full"></div>
                         </div>
                       )}
                       <div
@@ -206,9 +206,9 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
                         <p className="text-sm text-center text-gray-700 dark:text-gray-300 font-mono break-all w-full">{file}</p>
                       </div>
                       {showRightIndicator && (
-                        <div className="absolute -right-2 top-0 bottom-0 w-1 bg-blue-500 z-10 rounded-full">
-                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <div className="absolute -right-2 top-0 bottom-0 w-1 bg-orange z-10 rounded-full">
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange rounded-full"></div>
+                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-orange rounded-full"></div>
                         </div>
                       )}
                     </div>
