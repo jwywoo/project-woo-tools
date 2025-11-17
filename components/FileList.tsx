@@ -15,6 +15,7 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
   const [previewUrls, setPreviewUrls] = useState<(string | null)[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (fileObjects && fileObjects.length > 0) {
@@ -73,10 +74,24 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
   const canDrag = variant === 'original' && !!onReorder;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col h-full">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-        {title}
-      </h2>
+    <>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col h-full">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {title}
+          </h2>
+          {variant === 'original' && files.length > 0 && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title="Expand view"
+            >
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+            </button>
+          )}
+        </div>
       <div className="flex-1 overflow-y-auto min-h-0">
         {files.length === 0 ? (
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 flex items-center">
@@ -130,5 +145,80 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
         )}
       </div>
     </div>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setIsModalOpen(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{title}</h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content - Card Grid */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {files.map((file, index) => {
+                  const isDraggingCard = draggedIndex === index;
+                  const isDragOverCard = dragOverIndex === index && draggedIndex !== index;
+                  const showLeftIndicator = isDragOverCard && draggedIndex !== null && draggedIndex > index;
+                  const showRightIndicator = isDragOverCard && draggedIndex !== null && draggedIndex < index;
+
+                  return (
+                    <div key={index} className="relative">
+                      {showLeftIndicator && (
+                        <div className="absolute -left-2 top-0 bottom-0 w-1 bg-blue-500 z-10 rounded-full">
+                          <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+                          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+                        </div>
+                      )}
+                      <div
+                        draggable={!!onReorder}
+                        onDragStart={() => handleDragStart(index)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragEnd={handleDragEnd}
+                        onDragLeave={handleDragLeave}
+                        className={`bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex flex-col items-center gap-3 transition-all ${
+                          onReorder ? 'cursor-move' : ''
+                        } ${isDraggingCard ? 'opacity-50 scale-95' : 'hover:shadow-lg'}`}
+                      >
+                        {previewUrls[index] ? (
+                          <img
+                            src={previewUrls[index]!}
+                            alt={file}
+                            className="w-full h-32 object-cover rounded border border-gray-300 dark:border-gray-600 pointer-events-none"
+                          />
+                        ) : (
+                          <div className="w-full h-32 bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center">
+                            <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                        <p className="text-sm text-center text-gray-700 dark:text-gray-300 font-mono break-all w-full">{file}</p>
+                      </div>
+                      {showRightIndicator && (
+                        <div className="absolute -right-2 top-0 bottom-0 w-1 bg-blue-500 z-10 rounded-full">
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
