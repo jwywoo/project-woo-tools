@@ -14,15 +14,35 @@ export default function MainPage() {
   const [gap, setGap] = useState<number>(1);
   const [renamedFiles, setRenamedFiles] = useState<RenamedFile[]>([]);
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [downloadProgress, setDownloadProgress] = useState<{ show: boolean; message: string; percent: number }>({
+    show: false,
+    message: '',
+    percent: 0
+  });
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   const handleFilesChange = (newFiles: File[]) => {
-    setFiles(newFiles);
+    // Add new files to existing files instead of replacing
+    setFiles(prevFiles => [...prevFiles, ...newFiles]);
     setShowPreview(false);
     setRenamedFiles([]);
   };
 
   const handleReorder = (newOrder: File[]) => {
     setFiles(newOrder);
+    setShowPreview(false);
+    setRenamedFiles([]);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    const newFiles = files.filter((_, i) => i !== index);
+    setFiles(newFiles);
+    setShowPreview(false);
+    setRenamedFiles([]);
+  };
+
+  const handleResetFiles = () => {
+    setFiles([]);
     setShowPreview(false);
     setRenamedFiles([]);
   };
@@ -52,7 +72,33 @@ export default function MainPage() {
 
   const handleConfirm = async () => {
     if (files.length > 0 && renamedFiles.length > 0) {
-      await downloadRenamedFiles(files, renamedFiles);
+      const controller = new AbortController();
+      setAbortController(controller);
+      setDownloadProgress({ show: true, message: 'Starting...', percent: 0 });
+      try {
+        await downloadRenamedFiles(files, renamedFiles, (message, percent) => {
+          setDownloadProgress({ show: true, message, percent });
+        }, controller.signal);
+        // Hide progress after a short delay
+        setTimeout(() => {
+          setDownloadProgress({ show: false, message: '', percent: 0 });
+          setAbortController(null);
+        }, 2000);
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('Download cancelled by user');
+        }
+        setDownloadProgress({ show: false, message: '', percent: 0 });
+        setAbortController(null);
+      }
+    }
+  };
+
+  const handleCancelDownload = () => {
+    if (abortController) {
+      abortController.abort();
+      setDownloadProgress({ show: false, message: '', percent: 0 });
+      setAbortController(null);
     }
   };
 
@@ -72,11 +118,41 @@ export default function MainPage() {
           </p>
         </div>
 
+        {/* Progress Bar */}
+        {downloadProgress.show && (
+          <div className="mb-6 bg-gray-200 dark:bg-gray-200 rounded-lg shadow-lg p-6 border-4 border-orange dark:border-orange">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex-1 mr-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-900">
+                    {downloadProgress.message}
+                  </span>
+                  <span className="text-sm font-medium text-orange dark:text-orange">
+                    {downloadProgress.percent.toFixed(0)}%
+                  </span>
+                </div>
+                <div className="w-full bg-white dark:bg-white rounded-full h-4 border border-gray-300">
+                  <div
+                    className="bg-orange h-full rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${downloadProgress.percent}%` }}
+                  ></div>
+                </div>
+              </div>
+              <button
+                onClick={handleCancelDownload}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column - Upload and Pattern Settings */}
           <div className="space-y-6">
-            <FileUpload onFilesChange={handleFilesChange} />
+            <FileUpload onFilesChange={handleFilesChange} currentFileCount={files.length} />
             <PatternInput
               pattern={pattern}
               startNumber={startNumber}
@@ -100,6 +176,8 @@ export default function MainPage() {
                 emptyMessage="No files uploaded yet"
                 variant="original"
                 onReorder={handleReorder}
+                onRemove={handleRemoveFile}
+                onReset={handleResetFiles}
               />
             </div>
             <div className="h-[430px]">

@@ -9,9 +9,11 @@ interface FileListProps {
   emptyMessage: string;
   variant?: 'original' | 'renamed';
   onReorder?: (newOrder: File[]) => void;
+  onRemove?: (index: number) => void;
+  onReset?: () => void;
 }
 
-export default function FileList({ title, files, fileObjects, emptyMessage, variant = 'original', onReorder }: FileListProps) {
+export default function FileList({ title, files, fileObjects, emptyMessage, variant = 'original', onReorder, onRemove, onReset }: FileListProps) {
   const [previewUrls, setPreviewUrls] = useState<(string | null)[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -88,15 +90,28 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
             {title}
           </h2>
           {variant === 'original' && files.length > 0 && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-100 rounded-lg transition-colors"
-              title="Expand view"
-            >
-              <svg className="w-5 h-5 text-orange dark:text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2">
+              {onReset && (
+                <button
+                  onClick={onReset}
+                  className="p-2 hover:bg-red-100 dark:hover:bg-red-100 rounded-lg transition-colors"
+                  title="Clear all files"
+                >
+                  <svg className="w-5 h-5 text-red-600 dark:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              )}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-100 rounded-lg transition-colors"
+                title="Expand view"
+              >
+                <svg className="w-5 h-5 text-orange dark:text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+              </button>
+            </div>
           )}
         </div>
       <div className="flex-1 overflow-y-auto min-h-0">
@@ -131,13 +146,26 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
                     } ${isDragging ? 'opacity-50 scale-95' : ''}`}
                   >
                     <span className="text-sm font-mono flex-1">{file}</span>
-                    {previewUrls[index] && (
-                      <img
-                        src={previewUrls[index]!}
-                        alt={file}
-                        className="w-10 h-10 object-cover rounded border border-gray-300 dark:border-gray-300"
-                      />
-                    )}
+                    <div className="flex items-center gap-2">
+                      {previewUrls[index] && (
+                        <img
+                          src={previewUrls[index]!}
+                          alt={file}
+                          className="w-10 h-10 object-cover rounded border border-gray-300 dark:border-gray-300"
+                        />
+                      )}
+                      {variant === 'original' && onRemove && (
+                        <button
+                          onClick={() => onRemove(index)}
+                          className="p-1 hover:bg-red-100 dark:hover:bg-red-100 rounded transition-colors"
+                          title="Remove file"
+                        >
+                          <svg className="w-4 h-4 text-red-600 dark:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {showBottomIndicator && (
                     <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-orange z-10">
@@ -193,10 +221,21 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
                         onDragOver={(e) => handleDragOver(e, index)}
                         onDragEnd={handleDragEnd}
                         onDragLeave={handleDragLeave}
-                        className={`bg-white dark:bg-white rounded-lg p-4 flex flex-col items-center gap-3 transition-all border border-gray-200 ${
+                        className={`bg-white dark:bg-white rounded-lg p-4 flex flex-col items-center gap-3 transition-all border border-gray-200 relative ${
                           onReorder ? 'cursor-move' : ''
                         } ${isDraggingCard ? 'opacity-50 scale-95' : 'hover:shadow-lg'}`}
                       >
+                        {onRemove && (
+                          <button
+                            onClick={() => onRemove(index)}
+                            className="absolute top-2 right-2 p-1 bg-white dark:bg-white hover:bg-red-100 dark:hover:bg-red-100 rounded-full transition-colors z-20 shadow-sm border border-gray-200"
+                            title="Remove file"
+                          >
+                            <svg className="w-4 h-4 text-red-600 dark:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
                         {previewUrls[index] ? (
                           <img
                             src={previewUrls[index]!}

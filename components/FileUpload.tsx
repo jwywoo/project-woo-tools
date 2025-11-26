@@ -2,18 +2,73 @@
 
 interface FileUploadProps {
   onFilesChange: (files: File[]) => void;
+  currentFileCount?: number;
 }
 
-export default function FileUpload({ onFilesChange }: FileUploadProps) {
+const MAX_FILES = 5000;
+const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB per file
+const MAX_TOTAL_SIZE = 10 * 1024 * 1024 * 1024; // 10GB total
+
+export default function FileUpload({ onFilesChange, currentFileCount = 0 }: FileUploadProps) {
+  const validateFiles = (files: File[]): { valid: File[]; error?: string } => {
+    // Check file count
+    if (currentFileCount + files.length > MAX_FILES) {
+      return {
+        valid: [],
+        error: `Maximum ${MAX_FILES} files allowed. You can only add ${MAX_FILES - currentFileCount} more files.`
+      };
+    }
+
+    // Check individual file sizes and total size
+    let totalSize = 0;
+    const validFiles: File[] = [];
+
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        return {
+          valid: [],
+          error: `File "${file.name}" is too large. Maximum file size is 2GB.`
+        };
+      }
+      totalSize += file.size;
+      validFiles.push(file);
+    }
+
+    if (totalSize > MAX_TOTAL_SIZE) {
+      return {
+        valid: [],
+        error: `Total file size exceeds 10GB. Please select fewer or smaller files.`
+      };
+    }
+
+    return { valid: validFiles };
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    onFilesChange(files);
+    const { valid, error } = validateFiles(files);
+
+    if (error) {
+      alert(error);
+      e.target.value = ''; // Reset input
+      return;
+    }
+
+    onFilesChange(valid);
+    e.target.value = ''; // Reset input for next selection
   };
 
   const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
-    onFilesChange(files);
+    const { valid, error } = validateFiles(files);
+
+    if (error) {
+      alert(error);
+      return;
+    }
+
+    onFilesChange(valid);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
@@ -22,9 +77,16 @@ export default function FileUpload({ onFilesChange }: FileUploadProps) {
 
   return (
     <div className="bg-gray-200 dark:bg-gray-200 rounded-lg shadow-lg p-6 border-4 border-orange dark:border-orange">
-      <h2 className="text-3xl font-semibold text-orange dark:text-orange mb-4">
-        Upload Files
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-3xl font-semibold text-orange dark:text-orange">
+          Upload Files
+        </h2>
+        {currentFileCount > 0 && (
+          <span className="text-sm text-gray-700 dark:text-gray-700 bg-white px-3 py-1 rounded-full border border-gray-300">
+            {currentFileCount} / {MAX_FILES} files
+          </span>
+        )}
+      </div>
       <label
         htmlFor="file-upload"
         onDrop={handleDrop}
