@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface FileListProps {
   title: string;
@@ -20,15 +19,6 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
-  const parentRef = useRef<HTMLDivElement>(null);
-
-  // Virtual scroller
-  const virtualizer = useVirtualizer({
-    count: files.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 60,
-    overscan: 5,
-  });
 
   // Use ref to avoid re-creating the callback
   const previewUrlsRef = useRef<Map<number, string>>(new Map());
@@ -140,7 +130,7 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
       dragOverFrameRef.current = null;
     }
 
-    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex && fileObjects && onReorder) {
+    if (draggedIndex !== null && dragOverIndex !== null && fileObjects && onReorder) {
       const newFiles = [...fileObjects];
 
       // Get all selected indices in order
@@ -148,18 +138,39 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
 
       if (selected.length > 1) {
         // Multi-select drag: move all selected items together
+
+        // Check if we're trying to drop within the selected range - if so, do nothing
+        if (selected.includes(dragOverIndex)) {
+          setDraggedIndex(null);
+          setDragOverIndex(null);
+          return;
+        }
+
         const selectedFiles = selected.map(i => newFiles[i]);
 
-        // Remove selected items (in reverse to maintain indices)
-        selected.reverse().forEach(i => {
-          newFiles.splice(i, 1);
-        });
-
-        // Calculate new insert position (accounting for removed items)
+        // Calculate new insert position BEFORE removing items
+        // If dropping after the selection, we need to account for removed items
         let insertPos = dragOverIndex;
-        selected.forEach(i => {
-          if (i < dragOverIndex) insertPos--;
-        });
+
+        // Count how many selected items are before the drop position
+        const numSelectedBefore = selected.filter(i => i < dragOverIndex).length;
+
+        // Adjust insert position based on whether we're dropping before or after
+        if (dragOverIndex > selected[selected.length - 1]) {
+          // Dropping after all selected items - adjust for removed items
+          insertPos = dragOverIndex - numSelectedBefore + 1;
+        } else if (dragOverIndex < selected[0]) {
+          // Dropping before all selected items - no adjustment needed
+          insertPos = dragOverIndex;
+        } else {
+          // This shouldn't happen due to the check above, but handle it anyway
+          insertPos = dragOverIndex;
+        }
+
+        // Remove selected items (in reverse to maintain indices)
+        for (let i = selected.length - 1; i >= 0; i--) {
+          newFiles.splice(selected[i], 1);
+        }
 
         // Insert all selected files at the new position
         newFiles.splice(insertPos, 0, ...selectedFiles);
@@ -174,10 +185,12 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
         setSelectedIndices(newSelected);
       } else {
         // Single item drag
-        const [draggedFile] = newFiles.splice(draggedIndex, 1);
-        newFiles.splice(dragOverIndex, 0, draggedFile);
-        onReorder(newFiles);
-        setSelectedIndices(new Set([dragOverIndex]));
+        if (draggedIndex !== dragOverIndex) {
+          const [draggedFile] = newFiles.splice(draggedIndex, 1);
+          newFiles.splice(dragOverIndex, 0, draggedFile);
+          onReorder(newFiles);
+          setSelectedIndices(new Set([dragOverIndex]));
+        }
       }
     }
     setDraggedIndex(null);
@@ -240,26 +253,14 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
             </div>
           )}
         </div>
-      <div
-        ref={parentRef}
-        className="flex-1 min-h-0 overflow-y-auto pr-2"
-        style={{ height: '350px' }}
-      >
+      <div className="flex-1 min-h-0 overflow-y-auto pr-2" style={{ height: '350px' }}>
         {files.length === 0 ? (
           <div className="bg-white dark:bg-white rounded-lg p-3 flex items-center border border-gray-200">
             <span className="text-gray-600 dark:text-gray-600 text-sm">{emptyMessage}</span>
           </div>
         ) : (
-          <div
-            style={{
-              height: `${virtualizer.getTotalSize()}px`,
-              width: '100%',
-              position: 'relative',
-            }}
-          >
-            {virtualizer.getVirtualItems().map((virtualRow) => {
-              const index = virtualRow.index;
-              const file = files[index];
+          <div className="space-y-2">
+            {files.map((file, index) => {
               const isDragging = selectedIndices.has(index) && draggedIndex !== null;
               const isDragOver = dragOverIndex === index && draggedIndex !== index;
               const showTopIndicator = isDragOver && draggedIndex !== null && draggedIndex > index;
@@ -268,69 +269,57 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
               const previewUrl = getPreviewUrl(index);
 
               return (
-                <div
-                  key={virtualRow.key}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: `${virtualRow.size}px`,
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                >
-                  <div className="relative h-full pb-2">
-                    {showTopIndicator && (
-                      <div className="absolute -top-1 left-0 right-0 h-0.5 bg-orange dark:bg-orange z-10">
-                        <div className="absolute -left-1 -top-1 w-2 h-2 bg-orange dark:bg-orange rounded-full"></div>
-                        <div className="absolute -right-1 -top-1 w-2 h-2 bg-orange dark:bg-orange rounded-full"></div>
-                      </div>
-                    )}
-                    <div
-                      draggable={canDrag}
-                      onClick={(e) => handleSelect(index, e)}
-                      onDragStart={(e) => handleDragStart(index, e)}
-                      onDragOver={(e) => handleDragOver(e, index)}
-                      onDragEnd={handleDragEnd}
-                      onDragLeave={handleDragLeave}
-                      className={`${itemClass} flex items-center gap-3 transition-all h-full ${
-                        canDrag ? 'cursor-move' : ''
-                      } ${isDragging ? 'opacity-50 scale-95' : ''} ${
-                        isSelected ? 'ring-2 ring-orange bg-orange/10' : ''
-                      }`}
-                    >
-                      <span className="text-sm font-mono flex-1 truncate">{file}</span>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {previewUrl && (
-                          <img
-                            src={previewUrl}
-                            alt={file}
-                            className="w-10 h-10 object-cover rounded border border-gray-300 dark:border-gray-300"
-                          />
-                        )}
-                        {variant === 'original' && onRemove && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onRemove(index);
-                            }}
-                            className="p-1 hover:bg-red-100 dark:hover:bg-red-100 rounded transition-colors"
-                            title="Remove file"
-                          >
-                            <svg className="w-4 h-4 text-red-600 dark:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
+                <div key={index} className="relative">
+                  {showTopIndicator && (
+                    <div className="absolute -top-1 left-0 right-0 h-0.5 bg-orange dark:bg-orange z-10">
+                      <div className="absolute -left-1 -top-1 w-2 h-2 bg-orange dark:bg-orange rounded-full"></div>
+                      <div className="absolute -right-1 -top-1 w-2 h-2 bg-orange dark:bg-orange rounded-full"></div>
                     </div>
-                    {showBottomIndicator && (
-                      <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-orange z-10">
-                        <div className="absolute -left-1 -top-1 w-2 h-2 bg-orange rounded-full"></div>
-                        <div className="absolute -right-1 -top-1 w-2 h-2 bg-orange rounded-full"></div>
-                      </div>
-                    )}
+                  )}
+                  <div
+                    draggable={canDrag}
+                    onClick={(e) => handleSelect(index, e)}
+                    onDragStart={(e) => handleDragStart(index, e)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragEnd={handleDragEnd}
+                    onDragLeave={handleDragLeave}
+                    className={`${itemClass} flex items-center gap-3 transition-all ${
+                      canDrag ? 'cursor-move' : ''
+                    } ${isDragging ? 'opacity-50 scale-95' : ''} ${
+                      isSelected ? 'ring-2 ring-orange bg-orange/10' : ''
+                    }`}
+                  >
+                    <span className="text-sm font-mono flex-1 truncate">{file}</span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {previewUrl && (
+                        <img
+                          src={previewUrl}
+                          alt={file}
+                          className="w-10 h-10 object-cover rounded border border-gray-300 dark:border-gray-300"
+                        />
+                      )}
+                      {variant === 'original' && onRemove && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemove(index);
+                          }}
+                          className="p-1 hover:bg-red-100 dark:hover:bg-red-100 rounded transition-colors"
+                          title="Remove file"
+                        >
+                          <svg className="w-4 h-4 text-red-600 dark:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  {showBottomIndicator && (
+                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-orange z-10">
+                      <div className="absolute -left-1 -top-1 w-2 h-2 bg-orange rounded-full"></div>
+                      <div className="absolute -right-1 -top-1 w-2 h-2 bg-orange rounded-full"></div>
+                    </div>
+                  )}
                 </div>
               );
             })}
