@@ -15,7 +15,6 @@ interface FileListProps {
 }
 
 export default function FileList({ title, files, fileObjects, emptyMessage, variant = 'original', onReorder, onRemove, onReset }: FileListProps) {
-  const [previewUrls, setPreviewUrls] = useState<Map<number, string>>(new Map());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -31,14 +30,16 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
     overscan: 5,
   });
 
+  // Use ref to avoid re-creating the callback
+  const previewUrlsRef = useRef<Map<number, string>>(new Map());
+
   // Lazy load preview URLs only when needed
   const getPreviewUrl = useCallback((index: number): string | null => {
     if (!fileObjects || !fileObjects[index]) return null;
 
     // Check if we already have a URL for this index
-    if (previewUrls.has(index)) {
-      return previewUrls.get(index)!;
-    }
+    const cached = previewUrlsRef.current.get(index);
+    if (cached) return cached;
 
     const file = fileObjects[index];
     const ext = file.name.split('.').pop()?.toLowerCase();
@@ -46,26 +47,36 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
 
     if (isImage) {
       const url = URL.createObjectURL(file);
-      setPreviewUrls(prev => new Map(prev).set(index, url));
+      previewUrlsRef.current.set(index, url);
       return url;
     }
 
     return null;
-  }, [fileObjects, previewUrls]);
-
-  // Cleanup URLs when component unmounts or files change
-  useEffect(() => {
-    return () => {
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
-    };
-  }, []);
+  }, [fileObjects]);
 
   // Reset preview URLs when files change
   useEffect(() => {
     // Revoke old URLs
-    previewUrls.forEach(url => URL.revokeObjectURL(url));
-    setPreviewUrls(new Map());
+    previewUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+    previewUrlsRef.current.clear();
   }, [fileObjects]);
+
+  // Cleanup URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      previewUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+      previewUrlsRef.current.clear();
+    };
+  }, []);
+
+  // Cleanup RAF on unmount
+  useEffect(() => {
+    return () => {
+      if (dragOverFrameRef.current !== null) {
+        cancelAnimationFrame(dragOverFrameRef.current);
+      }
+    };
+  }, []);
 
   const handleSelect = (index: number, e: React.MouseEvent) => {
     if (!canDrag) return;
@@ -96,7 +107,7 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
     }
   };
 
-  const handleDragStart = (index: number, e: React.DragEvent) => {
+  const handleDragStart = useCallback((index: number, e: React.DragEvent) => {
     // If dragging a selected item, drag all selected items
     if (selectedIndices.has(index)) {
       setDraggedIndex(index);
@@ -105,15 +116,30 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
       setSelectedIndices(new Set([index]));
       setDraggedIndex(index);
     }
-  };
+  }, [selectedIndices]);
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  // Use requestAnimationFrame for smoother drag over performance
+  const dragOverFrameRef = useRef<number | null>(null);
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault();
     if (draggedIndex === index || dragOverIndex === index) return;
-    setDragOverIndex(index);
-  };
 
-  const handleDragEnd = () => {
+    // Use RAF to throttle updates and align with browser repaints
+    if (dragOverFrameRef.current === null) {
+      dragOverFrameRef.current = requestAnimationFrame(() => {
+        setDragOverIndex(index);
+        dragOverFrameRef.current = null;
+      });
+    }
+  }, [draggedIndex, dragOverIndex]);
+
+  const handleDragEnd = useCallback(() => {
+    // Clear any pending RAF
+    if (dragOverFrameRef.current !== null) {
+      cancelAnimationFrame(dragOverFrameRef.current);
+      dragOverFrameRef.current = null;
+    }
+
     if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex && fileObjects && onReorder) {
       const newFiles = [...fileObjects];
 
@@ -156,7 +182,7 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
     }
     setDraggedIndex(null);
     setDragOverIndex(null);
-  };
+  }, [draggedIndex, dragOverIndex, fileObjects, onReorder, selectedIndices]);
 
   const handleDragLeave = (e: React.DragEvent) => {
     // Only clear if we're actually leaving the draggable area
