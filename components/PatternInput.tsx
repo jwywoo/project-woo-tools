@@ -24,39 +24,39 @@ export default function PatternInput({
   disabled = false,
 }: PatternInputProps) {
   return (
-    <div className="bg-gray-200 dark:bg-gray-200 rounded-lg shadow-lg p-6 border-4 border-orange dark:border-orange">
-      <h2 className="text-3xl font-semibold text-orange dark:text-orange mb-4">
+    <div className="bg-white border-3 border-black p-5 rounded-2xl card-3d">
+      <h2 className="text-xl md:text-2xl font-bold text-black mb-4">
         Pattern Settings
       </h2>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-black/70 mb-2">
             Naming Pattern
           </label>
           <input
             type="text"
             value={pattern}
             onChange={(e) => onPatternChange(e.target.value)}
-            placeholder="e.g., photo_{index}.{ext}"
-            className="w-full px-4 py-2 border border-orange dark:border-orange rounded-lg focus:ring-2 focus:ring-orange dark:focus:ring-orange focus:border-transparent bg-white dark:bg-white text-gray-900 dark:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400"
+            placeholder="photo_{index}"
+            className="w-full px-4 py-3 border-2 border-black/20 focus:border-mint focus:outline-none focus:ring-2 focus:ring-mint/30 bg-white text-black rounded-lg transition-all placeholder-black/40"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-black/70 mb-2">
               Start Number
             </label>
             <input
               type="text"
               value={startNumber}
               onChange={(e) => onStartNumberChange(e.target.value)}
-              placeholder="e.g., 0000 or 01"
-              className="w-full px-4 py-2 border border-orange dark:border-orange rounded-lg focus:ring-2 focus:ring-orange dark:focus:ring-orange focus:border-transparent bg-white dark:bg-white text-gray-900 dark:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400"
+              placeholder="0001"
+              className="w-full px-4 py-3 border-2 border-black/20 focus:border-mint focus:outline-none focus:ring-2 focus:ring-mint/30 bg-white text-black rounded-lg transition-all placeholder-black/40"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-black/70 mb-2">
               Gap
             </label>
             <input
@@ -64,42 +64,40 @@ export default function PatternInput({
               value={gap}
               onChange={(e) => onGapChange(parseInt(e.target.value) || 1)}
               min="1"
-              className="w-full px-4 py-2 border border-orange dark:border-orange rounded-lg focus:ring-2 focus:ring-orange dark:focus:ring-orange focus:border-transparent bg-white dark:bg-white text-gray-900 dark:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400"
+              className="w-full px-4 py-3 border-2 border-black/20 focus:border-mint focus:outline-none focus:ring-2 focus:ring-mint/30 bg-white text-black rounded-lg transition-all"
             />
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3">
+        {/* Action Buttons - Cute 3D Style */}
+        <div className="flex gap-3 pt-2">
           <button
             onClick={onPreview}
             disabled={disabled}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="flex-1 bg-purple text-white font-bold py-3.5 px-6 rounded-xl border-2 border-black btn-3d disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
             Preview
           </button>
           <button
             onClick={onConfirm}
             disabled={disabled}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="flex-1 bg-mint text-white font-bold py-3.5 px-6 rounded-xl border-2 border-black btn-3d disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
-            Confirm & Download
+            Download
           </button>
         </div>
 
-        <div className="bg-white dark:bg-white rounded-lg p-4 border border-gray-300">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-900 mb-2">Quick Guide:</p>
-          <ul className="text-xs text-gray-900 dark:text-gray-900 space-y-1">
-            <li><code className="bg-gray-200 dark:bg-gray-200 px-1 rounded">{'{name}'}</code> - Original filename (without extension)</li>
-            <li><code className="bg-gray-200 dark:bg-gray-200 px-1 rounded">{'{index}'}</code> - Number with padding from Start Number</li>
-            <li><code className="bg-gray-200 dark:bg-gray-200 px-1 rounded">{'{date}'}</code> - Current date (YYYY-MM-DD)</li>
-          </ul>
-          <div className="mt-2 pt-2 border-t border-gray-300 dark:border-gray-300">
-            <p className="text-xs text-gray-900 dark:text-gray-900">
-              <strong>Example:</strong> photo_{'{index}'} + Start 0000 → photo_0000, photo_0001...
-            </p>
-            <p className="text-xs text-gray-900 dark:text-gray-900 mt-1">
-              <strong>Gap:</strong> Gap 2 + Start 00 → 00, 02, 04, 06...
+        {/* Guide - Cute Style */}
+        <div className="bg-peach/30 border-2 border-black/10 p-4 rounded-xl">
+          <p className="text-sm font-medium text-black/80 mb-2">Quick Guide</p>
+          <div className="text-sm text-black/70 space-y-1">
+            <p><code className="bg-white px-1.5 py-0.5 rounded text-pink font-mono text-xs">{'{name}'}</code> Original filename</p>
+            <p><code className="bg-white px-1.5 py-0.5 rounded text-pink font-mono text-xs">{'{index}'}</code> Number (with padding)</p>
+            <p><code className="bg-white px-1.5 py-0.5 rounded text-pink font-mono text-xs">{'{date}'}</code> Today&apos;s date</p>
+          </div>
+          <div className="mt-3 pt-3 border-t border-black/10">
+            <p className="text-xs text-black/60">
+              <span className="font-medium">Example:</span> photo_{'{index}'} + 0000 → photo_0000, photo_0001...
             </p>
           </div>
         </div>

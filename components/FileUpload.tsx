@@ -76,14 +76,14 @@ export default function FileUpload({ onFilesChange, currentFileCount = 0 }: File
   };
 
   return (
-    <div className="bg-gray-200 dark:bg-gray-200 rounded-lg shadow-lg p-6 border-4 border-orange dark:border-orange">
+    <div className="bg-white border-3 border-black p-5 rounded-2xl card-3d">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-3xl font-semibold text-orange dark:text-orange">
+        <h2 className="text-xl md:text-2xl font-bold text-black">
           Upload Files
         </h2>
         {currentFileCount > 0 && (
-          <span className="text-sm text-gray-700 dark:text-gray-700 bg-white px-3 py-1 rounded-full border border-gray-300">
-            {currentFileCount} / {MAX_FILES} files
+          <span className="text-sm font-medium text-white bg-mint px-3 py-1 rounded-full">
+            {currentFileCount} files
           </span>
         )}
       </div>
@@ -91,14 +91,12 @@ export default function FileUpload({ onFilesChange, currentFileCount = 0 }: File
         htmlFor="file-upload"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        className="border-3 border-dashed border-orange dark:border-orange rounded-lg p-12 text-center hover:border-orange/80 dark:hover:border-orange/80 transition-colors cursor-pointer block bg-white"
+        className="border-3 border-dashed border-black/30 p-8 md:p-10 text-center hover:border-mint hover:bg-mint/10 rounded-xl transition-all cursor-pointer block bg-cream/50"
       >
-        <div className="text-gray-900 dark:text-gray-900">
-          <svg className="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
-          <p className="text-lg font-medium">Click to upload or drag and drop</p>
-          <p className="text-sm mt-2">Support for multiple files</p>
+        <div className="text-black">
+          <div className="text-4xl mb-3 text-mint font-bold">+</div>
+          <p className="text-lg font-bold">Click or drop files here</p>
+          <p className="text-sm text-black/60 mt-2">Up to {MAX_FILES} files • 2GB each</p>
         </div>
         <input
           id="file-upload"

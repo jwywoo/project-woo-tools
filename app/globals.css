@@ -1,33 +1,89 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #07111F;
-  --primary: #FC4E00;
-  --primary-dark: #e34500;
+  --background: #FFF8F0;
+  --foreground: #2D3436;
+  --primary: #FF6B6B;
+  --accent: #4ECDC4;
+  --border: #2D3436;
+  --shadow: #2D3436;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
-  --color-primary-dark: var(--primary-dark);
-  --color-navy: #07111F;
-  --color-orange: #FC4E00;
-  --color-summer-blue: #0000CC;
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-black: #2D3436;
+  --color-white: #FFFFFF;
+  --color-cream: #FFF8F0;
+  --color-pink: #FF6B6B;
+  --color-mint: #4ECDC4;
+  --color-yellow: #FFE66D;
+  --color-purple: #A29BFE;
+  --color-peach: #FFEAA7;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #07111F;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Cute 3D scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FFF8F0;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4ECDC4;
+  border-radius: 10px;
+  border: 2px solid #FFF8F0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF6B6B;
+}
+
+/* Selection styling */
+::selection {
+  background: #FFE66D;
+  color: #2D3436;
+}
+
+/* 3D Button base style */
+.btn-3d {
+  transform: translateY(0);
+  box-shadow: 0 4px 0 var(--shadow);
+  transition: all 0.1s ease;
+}
+
+.btn-3d:hover {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--shadow);
+}
+
+.btn-3d:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--shadow);
+}
+
+/* Card 3D effect */
+.card-3d {
+  box-shadow: 6px 6px 0 var(--shadow);
+  transition: all 0.2s ease;
+}
+
+.card-3d:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--shadow);
 }
