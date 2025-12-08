@@ -19,6 +19,7 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+  const [isReordering, setIsReordering] = useState<boolean>(false);
 
   // Use ref to avoid re-creating the callback
   const previewUrlsRef = useRef<Map<number, string>>(new Map());
@@ -68,7 +69,15 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
     };
   }, []);
 
-  const handleSelect = (index: number, e: React.MouseEvent) => {
+  // Clear selections when files change (fixes "1 selected" bug)
+  useEffect(() => {
+    setSelectedIndices(new Set());
+    setLastSelectedIndex(null);
+  }, [files.length]);
+
+  const canDrag = variant === 'original' && !!onReorder;
+
+  const handleSelect = useCallback((index: number, e: React.MouseEvent) => {
     if (!canDrag) return;
 
     if (e.shiftKey && lastSelectedIndex !== null) {
@@ -80,6 +89,7 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
         newSelected.add(i);
       }
       setSelectedIndices(newSelected);
+      setLastSelectedIndex(index);
     } else if (e.ctrlKey || e.metaKey) {
       // Ctrl/Cmd+click: toggle selection
       const newSelected = new Set(selectedIndices);
@@ -95,7 +105,7 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
       setSelectedIndices(new Set([index]));
       setLastSelectedIndex(index);
     }
-  };
+  }, [canDrag, lastSelectedIndex, selectedIndices]);
 
   const handleDragStart = useCallback((index: number, e: React.DragEvent) => {
     // If dragging a selected item, drag all selected items
@@ -105,6 +115,7 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
       // If dragging a non-selected item, select only that item and drag it
       setSelectedIndices(new Set([index]));
       setDraggedIndex(index);
+      setLastSelectedIndex(index);
     }
   }, [selectedIndices]);
 
@@ -112,16 +123,15 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
   const dragOverFrameRef = useRef<number | null>(null);
   const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault();
-    if (draggedIndex === index || dragOverIndex === index) return;
 
     // Use RAF to throttle updates and align with browser repaints
     if (dragOverFrameRef.current === null) {
       dragOverFrameRef.current = requestAnimationFrame(() => {
-        setDragOverIndex(index);
+        setDragOverIndex(prev => prev === index ? prev : index);
         dragOverFrameRef.current = null;
       });
     }
-  }, [draggedIndex, dragOverIndex]);
+  }, []);
 
   const handleDragEnd = useCallback(() => {
     // Clear any pending RAF
@@ -131,6 +141,9 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
     }
 
     if (draggedIndex !== null && dragOverIndex !== null && fileObjects && onReorder) {
+      // Show reordering state
+      setIsReordering(true);
+
       const newFiles = [...fileObjects];
 
       // Get all selected indices in order
@@ -143,6 +156,7 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
         if (selected.includes(dragOverIndex)) {
           setDraggedIndex(null);
           setDragOverIndex(null);
+          setIsReordering(false);
           return;
         }
 
@@ -192,12 +206,15 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
           setSelectedIndices(new Set([dragOverIndex]));
         }
       }
+
+      // Hide reordering state after a brief delay
+      setTimeout(() => setIsReordering(false), 300);
     }
     setDraggedIndex(null);
     setDragOverIndex(null);
   }, [draggedIndex, dragOverIndex, fileObjects, onReorder, selectedIndices]);
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
     // Only clear if we're actually leaving the draggable area
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const x = e.clientX;
@@ -206,9 +223,7 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
     if (x < rect.left || x >= rect.right || y < rect.top || y >= rect.bottom) {
       setDragOverIndex(null);
     }
-  };
-
-  const canDrag = variant === 'original' && !!onReorder;
+  }, []);
 
   return (
     <>
@@ -245,7 +260,16 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
             </div>
           )}
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto bg-cream/50 rounded-xl border-2 border-black/10" style={{ height: '350px' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto bg-cream/50 rounded-xl border-2 border-black/10 relative" style={{ height: '350px' }}>
+          {/* Reordering overlay */}
+          {isReordering && (
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-center rounded-xl">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 border-3 border-mint border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm font-medium text-black/70">Reordering...</span>
+              </div>
+            </div>
+          )}
           {files.length === 0 ? (
             <div className="h-full flex items-center justify-center">
               <span className="text-black/50 text-sm">{emptyMessage}</span>
@@ -329,7 +353,16 @@ export default function FileList({ title, files, fileObjects, emptyMessage, vari
             </div>
 
             {/* Modal Content - Card Grid */}
-            <div className="flex-1 overflow-y-auto p-5 bg-cream/30">
+            <div className="flex-1 overflow-y-auto p-5 bg-cream/30 relative">
+              {/* Reordering overlay for modal */}
+              {isReordering && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-10 h-10 border-4 border-mint border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-base font-medium text-black/70">Reordering...</span>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
                 {files.map((file, index) => {
                   const isDraggingCard = selectedIndices.has(index) && draggedIndex !== null;
